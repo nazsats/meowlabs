@@ -22,16 +22,25 @@ export const metadata: Metadata = {
 
 async function getUser() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user`, {
-      credentials: 'include',
-      cache: 'no-store', // Ensure fresh data
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/user`;
+    console.log('Fetching user from:', url); // Debug log
+    const res = await fetch(url, {
+      credentials: 'include', // Ensure cookies are sent
+      cache: 'no-store', // Prevent caching
+      headers: {
+        'Accept': 'application/json',
+      },
     });
+    console.log('User API response status:', res.status); // Debug log
     if (!res.ok) {
+      console.log('User API failed:', res.statusText);
       return null;
     }
     const data: { userId: string | null } = await res.json();
+    console.log('User API response data:', data); // Debug log
     return data.userId ? { id: data.userId } : null;
-  } catch {
+  } catch (error) {
+    console.error('Error fetching user:', error);
     return null;
   }
 }
@@ -42,6 +51,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getUser();
+  console.log('User in layout:', user); // Debug log
 
   return (
     <html lang='en'>
