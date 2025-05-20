@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Link from 'next/link';
 import Image from 'next/image';
+import Footer from '@/components/Footer';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -26,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-[var(--background)]`}>
         <header className='bg-gradient-to-r from-[var(--background)] to-[var(--accent)] p-3 sm:p-4 shadow-lg sticky top-0 z-50'>
           <div className='max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0'>
             <Link href='/' className='flex items-center gap-2 sm:gap-3'>
@@ -37,7 +38,6 @@ export default function RootLayout({
                 height={40}
                 className='rounded-full animate-glow sm:w-12 sm:h-12'
               />
-             
             </Link>
             <nav className='flex flex-wrap items-center gap-2 sm:gap-4'>
               <Link
@@ -80,7 +80,10 @@ export default function RootLayout({
             </nav>
           </div>
         </header>
-        <main className='max-w-6xl mx-auto p-4 sm:p-6 flex-grow'>{children}</main>
+        <main className='max-w-6xl mx-auto p-4 sm:p-6 flex-grow flex flex-col'>
+          {children}
+        </main>
+        <Footer /> {/* Move Footer here */}
       </body>
     </html>
   );

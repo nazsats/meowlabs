@@ -4,7 +4,6 @@ import WelcomeDashboard from '../components/WelcomeDashboard';
 import StatusPanel from '../components/StatusPanel';
 import WalletForm from '../components/WalletForm';
 import InfoPanel from '../components/InfoPanel';
-import Footer from '../components/Footer';
 import { db } from './lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -135,10 +134,14 @@ export default function Home() {
   }
 
   return (
-    <div className='flex flex-col gap-4 sm:gap-6'>
-      {error && <div className='bg-[var(--error)] text-white p-3 sm:p-4 rounded-lg text-center text-sm sm:text-base'>{error}</div>}
+    <div className='flex flex-col min-h-[calc(100vh-8rem)] items-center justify-center'>
+      {error && (
+        <div className='bg-[var(--error)] text-white p-3 sm:p-4 rounded-lg text-center text-sm sm:text-base'>
+          {error}
+        </div>
+      )}
       {user ? (
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full'>
           <div className='flex flex-col gap-4 sm:gap-6'>
             <WelcomeDashboard
               username={user.username}
@@ -177,7 +180,6 @@ export default function Home() {
           </a>
         </div>
       )}
-      <Footer />
     </div>
   );
 }
