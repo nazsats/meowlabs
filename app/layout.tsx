@@ -20,14 +20,34 @@ export const metadata: Metadata = {
   description: 'Manage your Catcents roles and wallet with Discord authentication',
 };
 
-export default function RootLayout({
+async function getUser() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user`, {
+      credentials: 'include',
+      cache: 'no-store', // Ensure fresh data
+    });
+    if (!res.ok) {
+      return null;
+    }
+    const data: { userId: string | null } = await res.json();
+    return data.userId ? { id: data.userId } : null;
+  } catch {
+    return null;
+  }
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getUser();
+
   return (
     <html lang='en'>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-[var(--background)]`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-[var(--background)]`}
+      >
         <header className='bg-gradient-to-r from-[var(--background)] to-[var(--accent)] p-3 sm:p-4 shadow-lg sticky top-0 z-50'>
           <div className='max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0'>
             <Link href='/' className='flex items-center gap-2 sm:gap-3'>
@@ -70,20 +90,30 @@ export default function RootLayout({
               >
                 <Image src='/discord-icon.png' alt='Discord' width={24} height={24} className='w-6 h-6 sm:w-7 sm:h-7' />
               </a>
-              <a
-                href='/api/auth/logout'
-                className='px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--error)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base'
-                aria-label='Sign Out'
-              >
-                Sign Out
-              </a>
+              {user ? (
+                <a
+                  href='/api/auth/logout'
+                  className='px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--error)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base'
+                  aria-label='Sign Out'
+                >
+                  Sign Out
+                </a>
+              ) : (
+                <a
+                  href='/api/auth/login'
+                  className='px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base'
+                  aria-label='Sign In'
+                >
+                  Sign In
+                </a>
+              )}
             </nav>
           </div>
         </header>
         <main className='max-w-6xl mx-auto p-4 sm:p-6 flex-grow flex flex-col'>
           {children}
         </main>
-        <Footer /> {/* Move Footer here */}
+        <Footer />
       </body>
     </html>
   );
