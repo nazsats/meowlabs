@@ -1,3 +1,5 @@
+'use client';
+import { useState, useEffect } from 'react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
@@ -20,38 +22,29 @@ export const metadata: Metadata = {
   description: 'Manage your Catcents roles and wallet with Discord authentication',
 };
 
-async function getUser() {
-  try {
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/user`;
-    console.log('Fetching user from:', url); // Debug log
-    const res = await fetch(url, {
-      credentials: 'include', // Ensure cookies are sent
-      cache: 'no-store', // Prevent caching
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
-    console.log('User API response status:', res.status); // Debug log
-    if (!res.ok) {
-      console.log('User API failed:', res.statusText);
-      return null;
-    }
-    const data: { userId: string | null } = await res.json();
-    console.log('User API response data:', data); // Debug log
-    return data.userId ? { id: data.userId } : null;
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    return null;
-  }
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await getUser();
-  console.log('User in layout:', user); // Debug log
+  const [user, setUser] = useState<{ id: string } | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/user', { credentials: 'include' });
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+        const data: { userId: string | null } = await res.json();
+        setUser(data.userId ? { id: data.userId } : null);
+      } catch {
+        setUser(null);
+      }
+    }
+    fetchUser();
+  }, []);
 
   return (
     <html lang='en'>
