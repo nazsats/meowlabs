@@ -1,26 +1,123 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #2596be;
+  --border: #4e3a76;
+  --accent: #CBC3E3;
+  --text: #FFFFFF;
+  --success: #34D399;
+  --error: #EF4444;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  height: 100%;
+  margin: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Geist', sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Ethnocentric', sans-serif;
+}
+
+@font-face {
+  font-family: 'Ethnocentric';
+  src: url('/fonts/Ethnocentric-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer utilities {
+  .animate-glow {
+    animation: glow 1.5s ease-in-out infinite;
+  }
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  .animate-cat-bounce {
+    animation: cat-bounce 2s ease-in-out infinite;
+  }
+  .animate-pulse-status {
+    animation: pulse-status 1.5s ease-in-out infinite;
+  }
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px var(--accent);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--accent);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cat-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-status {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  h3 {
+    font-size: 1rem;
+  }
+  .animate-glow {
+    box-shadow: 0 0 3px var(--accent);
+  }
+  .animate-cat-bounce {
+    transform: translateY(-5px);
+  }
 }

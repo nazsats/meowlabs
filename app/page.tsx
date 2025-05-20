@@ -1,103 +1,183 @@
-import Image from "next/image";
+'use client';
+import { useState, useEffect } from 'react';
+import WelcomeDashboard from '../components/WelcomeDashboard';
+import StatusPanel from '../components/StatusPanel';
+import WalletForm from '../components/WalletForm';
+import InfoPanel from '../components/InfoPanel';
+import Footer from '../components/Footer';
+import { db } from './lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
+interface User {
+  id: string;
+  username: string;
+  avatar: string | null;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [user, setUser] = useState<User | null>(null);
+  const [hasEligibleRole, setHasEligibleRole] = useState(false);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [highestRole, setHighestRole] = useState<string | null>(null);
+  const [walletStatus, setWalletStatus] = useState<{ submitted: boolean; timestamp?: string }>({
+    submitted: false,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    async function fetchUserAndData() {
+      try {
+        const userRes = await fetch('/api/user', { credentials: 'include' });
+        if (!userRes.ok) throw new Error(`User API failed: ${userRes.statusText}`);
+        const userData: { userId: string | null } = await userRes.json();
+        console.log('User API response:', userData);
+        if (!userData.userId) {
+          console.log('No userId, showing auth button');
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        const tokenRes = await fetch('/api/auth/token', {
+          headers: { 'X-User-Id': userData.userId },
+        });
+        if (!tokenRes.ok) throw new Error(`Token API failed: ${tokenRes.statusText}`);
+        const tokenData: { username: string; avatar: string | null } = await tokenRes.json();
+        console.log('Token API response:', tokenData);
+
+        setUser({
+          id: userData.userId,
+          username: tokenData.username || 'Unknown User',
+          avatar: tokenData.avatar,
+        });
+
+        const roleRes = await fetch(`/api/check-role?userId=${userData.userId}`);
+        if (!roleRes.ok) throw new Error(`Role API failed: ${roleRes.statusText}`);
+        const roleData: { hasEligibleRole?: boolean; roles: string[]; highestRole: string | null; error?: string } =
+          await roleRes.json();
+        console.log('Role API response (full):', roleData);
+        if (roleData.error) {
+          setError(roleData.error);
+        } else {
+          const eligibleRoles = [
+            'Meow Mavens',
+            'Community Manager',
+            'Purrfect Mod',
+            'OG Cat',
+            'X-Advocate',
+            'Claw Collector',
+            'Active Paw',
+            'Monad Veteran',
+            'Early Kitten',
+            'Pawthfinder',
+            'Yarn Master',
+            'Alley Alpha',
+            'Shadow Stalker',
+            'Furion Elite',
+            'Mythic Pouncer',
+            'Catcents Legend',
+            'Catlist',
+            'Test Catlist Role',
+            'Game Champion',
+            'Whisker Initiate',
+          ];
+          const eligible = roleData.hasEligibleRole !== undefined
+            ? roleData.hasEligibleRole
+            : roleData.roles.some((role) => eligibleRoles.includes(role));
+          setHasEligibleRole(eligible);
+          setRoles(roleData.roles || []);
+          setHighestRole(roleData.highestRole || null);
+        }
+
+        const walletDoc = doc(db, 'wallets', userData.userId);
+        const walletSnap = await getDoc(walletDoc);
+        console.log('Wallet snapshot exists:', walletSnap.exists(), 'UserId:', userData.userId);
+        if (walletSnap.exists()) {
+          const data = walletSnap.data();
+          setWalletStatus({
+            submitted: true,
+            timestamp: new Date(data.timestamp.toDate()).toLocaleString('en-US', {
+              timeZone: 'UTC',
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            }),
+          });
+        } else {
+          setWalletStatus({ submitted: false });
+        }
+      } catch (error: unknown) {
+        console.error('Error fetching data:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        setError(`Failed to load user data: ${errorMessage}`);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUserAndData();
+  }, []);
+
+  useEffect(() => {
+    console.log('State - hasEligibleRole:', hasEligibleRole, 'walletStatus:', walletStatus, 'roles:', roles);
+    if (hasEligibleRole && !walletStatus.submitted) {
+      console.log('WalletForm should be visible');
+    } else {
+      console.log('WalletForm hidden - Eligible:', hasEligibleRole, 'Submitted:', walletStatus.submitted);
+    }
+  }, [hasEligibleRole, walletStatus, roles]);
+
+  if (loading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='animate-spin h-10 w-10 sm:h-12 sm:w-12 border-4 border-[var(--accent)] border-t-transparent rounded-full' />
+      </div>
+    );
+  }
+
+  return (
+    <div className='flex flex-col gap-4 sm:gap-6'>
+      {error && <div className='bg-[var(--error)] text-white p-3 sm:p-4 rounded-lg text-center text-sm sm:text-base'>{error}</div>}
+      {user ? (
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6'>
+          <div className='flex flex-col gap-4 sm:gap-6'>
+            <WelcomeDashboard
+              username={user.username}
+              avatar={user.avatar}
+              primaryRole={highestRole || 'Member'}
+              roles={roles}
             />
-            Deploy now
-          </a>
+            <InfoPanel roles={roles} />
+          </div>
+          <div className='flex flex-col gap-4 sm:gap-6'>
+            <StatusPanel primaryRole={highestRole || 'Member'} roles={roles} walletStatus={walletStatus} />
+            {hasEligibleRole && !walletStatus.submitted ? (
+              <WalletForm userId={user.id} />
+            ) : (
+              <div className='bg-[var(--accent)] rounded-xl p-6 sm:p-8 shadow-xl border-4 border-[var(--border)] text-center'>
+                {hasEligibleRole && walletStatus.submitted ? (
+                  <p className='text-[var(--success)] text-base sm:text-lg'>Wallet already submitted!</p>
+                ) : (
+                  <p className='text-[var(--border)] text-base sm:text-lg'>
+                    You need an eligible role to submit a wallet (e.g., Early Kitten, Meow Mavens, Catlist).
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className='text-center py-8 sm:py-12'>
+          <h1 className='text-2xl sm:text-4xl font-bold text-[var(--text)] mb-4 sm:mb-6'>Welcome to Catcents</h1>
+          <p className='text-base sm:text-lg text-[var(--text)] mb-6 sm:mb-8'>Sign in with Discord to access your dashboard.</p>
           <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href='/api/auth/login'
+            className='px-6 py-3 sm:px-8 sm:py-4 bg-[var(--border)] text-[var(--text)] rounded-lg hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-base sm:text-lg font-semibold'
           >
-            Read our docs
+            Sign In with Discord
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
+      <Footer />
     </div>
   );
 }
