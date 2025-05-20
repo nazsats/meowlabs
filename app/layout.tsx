@@ -23,21 +23,21 @@ export const metadata: Metadata = {
 async function getUser() {
   try {
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/user`;
-    console.log('Fetching user from:', url); // Debug log
+    console.log('Fetching user from:', url);
     const res = await fetch(url, {
-      credentials: 'include', // Ensure cookies are sent
-      cache: 'no-store', // Prevent caching
+      credentials: 'include',
+      cache: 'no-store',
       headers: {
         'Accept': 'application/json',
       },
     });
-    console.log('User API response status:', res.status); // Debug log
+    console.log('User API response status:', res.status);
     if (!res.ok) {
       console.log('User API failed:', res.statusText);
       return null;
     }
     const data: { userId: string | null } = await res.json();
-    console.log('User API response data:', data); // Debug log
+    console.log('User API response data:', data);
     return data.userId ? { id: data.userId } : null;
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -51,7 +51,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getUser();
-  console.log('User in layout:', user); // Debug log
+  console.log('User in layout:', user);
 
   return (
     <html lang='en'>
@@ -100,7 +100,9 @@ export default async function RootLayout({
               >
                 <Image src='/discord-icon.png' alt='Discord' width={24} height={24} className='w-6 h-6 sm:w-7 sm:h-7' />
               </a>
-              {user ? (
+              {user === undefined ? (
+                <div className='animate-pulse h-8 w-20 bg-[var(--border)] rounded-full' />
+              ) : user ? (
                 <a
                   href='/api/auth/logout'
                   className='px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--error)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base'
@@ -108,15 +110,7 @@ export default async function RootLayout({
                 >
                   Sign Out
                 </a>
-              ) : (
-                <a
-                  href='/api/auth/login'
-                  className='px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base'
-                  aria-label='Sign In'
-                >
-                  Sign In
-                </a>
-              )}
+              ) : null}
             </nav>
           </div>
         </header>

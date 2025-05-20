@@ -158,7 +158,7 @@ export default function Home() {
             ) : (
               <div className='bg-[var(--accent)] rounded-xl p-6 sm:p-8 shadow-xl border-4 border-[var(--border)] text-center'>
                 {hasEligibleRole && walletStatus.submitted ? (
-                  <p className='text-[var(--success)] text-base sm:text-lg'>Wallet already submitted!</p>
+                  <p className='text-[var(--success)] text-base sm:text-lg'>If the contribution that earned you a Discord role doesn’t continue, you may also get purged.</p>
                 ) : (
                   <p className='text-[var(--border)] text-base sm:text-lg'>
                     You need an eligible role to submit a wallet (e.g., Early Kitten, Meow Mavens, Catlist).
