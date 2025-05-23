@@ -8,9 +8,10 @@ import Image from 'next/image';
 
 interface WalletFormProps {
   userId: string;
+  onRoleUpdate?: (roles: { hasEligibleRole: boolean; displayRoles: string[]; highestRoleName: string | null }) => void;
 }
 
-export default function WalletForm({ userId }: WalletFormProps) {
+export default function WalletForm({ userId, onRoleUpdate }: WalletFormProps) {
   const [walletAddress, setWalletAddress] = useState('');
   const [question, setQuestion] = useState('');
   const [error, setError] = useState('');
@@ -43,6 +44,18 @@ export default function WalletForm({ userId }: WalletFormProps) {
         icon: '✅',
         style: { background: '#CBC3E3', color: '#4e3a76' },
       });
+
+      const roleRes = await fetch(`/api/check-role?userId=${userId}&forceRefresh=true`);
+      if (!roleRes.ok) throw new Error(`Role API failed: ${roleRes.statusText}`);
+      const roleData = await roleRes.json();
+      if (!roleData.error && onRoleUpdate) {
+        onRoleUpdate({
+          hasEligibleRole: roleData.hasEligibleRole || false,
+          displayRoles: roleData.displayRoles || [],
+          highestRoleName: roleData.highestRoleName || null,
+        });
+      }
+
       setTimeout(() => router.push('/'), 3000);
     } catch (err) {
       setError('Failed to submit wallet. Please try again.');
@@ -55,8 +68,7 @@ export default function WalletForm({ userId }: WalletFormProps) {
 
   return (
     <div className='bg-[var(--accent)] rounded-xl p-4 sm:p-8 shadow-xl border-4 border-[var(--border)] relative'>
-      <div className='absolute to
-p-2 sm:top-4 right-2 sm:right-4 w-8 sm:w-12 h-8 sm:h-12'>
+      <div className='absolute top-2 sm:top-4 right-2 sm:right-4 w-8 sm:w-12 h-8 sm:h-12'>
         <Image
           src='/pixel-cat.png'
           alt='Cat Icon'

@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { getRoleProperties } from '../app/lib/discord';
+import { getRoleProperties, ROLE_PROPERTIES } from '../app/lib/discord';
 
 interface InfoPanelProps {
-  roles: string[];
+  roles: string[]; // Role display names
 }
 
 export default function InfoPanel({ roles }: InfoPanelProps) {
@@ -20,7 +20,11 @@ export default function InfoPanel({ roles }: InfoPanelProps) {
         <p className='text-[var(--border)] text-sm sm:text-base'>No roles assigned.</p>
       ) : (
         roles.map((role) => {
-          const { type, mintPhase } = getRoleProperties(role);
+          // Find the role ID for this display name
+          const roleId = Object.keys(ROLE_PROPERTIES).find(
+            (id) => ROLE_PROPERTIES[id].displayName === role
+          ) || '';
+          const { type, mintPhase } = getRoleProperties(roleId);
           const message = `Type: ${type}. You are eligible to mint NFTs in ${mintPhase}.`;
           return (
             <div key={role} className='border-b border-[var(--border)] last:border-b-0'>
