@@ -18,7 +18,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [hasEligibleRole, setHasEligibleRole] = useState(false);
   const [roles, setRoles] = useState<string[]>([]); // Role display names
-  const [highestRole, setHighestRole] = useState<string | null>(null); // Role display name
+  const [highestRole, setHighestRole] = useState<string>('No Role'); // Changed to string with default
   const [walletStatus, setWalletStatus] = useState<{ submitted: boolean; timestamp?: string }>({
     submitted: false,
   });
@@ -68,7 +68,7 @@ export default function Home() {
       } else {
         setHasEligibleRole(roleData.hasEligibleRole || false);
         setRoles(roleData.displayRoles || []);
-        setHighestRole(roleData.highestRoleName || 'No Role');
+        setHighestRole(roleData.highestRoleName || 'No Role'); // Ensure string
       }
 
       const walletDoc = doc(db, 'wallets', userData.userId);
@@ -158,14 +158,18 @@ export default function Home() {
             <InfoPanel roles={roles} />
           </div>
           <div className='flex flex-col gap-4 sm:gap-6'>
-            <StatusPanel primaryRole={highestRole} roles={roles} walletStatus={walletStatus} />
+            <StatusPanel
+              primaryRole={highestRole}
+              roles={roles}
+              walletStatus={walletStatus}
+            />
             {hasEligibleRole && !walletStatus.submitted ? (
               <WalletForm
                 userId={user.id}
                 onRoleUpdate={({ hasEligibleRole, displayRoles, highestRoleName }) => {
                   setHasEligibleRole(hasEligibleRole);
                   setRoles(displayRoles);
-                  setHighestRole(highestRoleName || 'No Role');
+                  setHighestRole(highestRoleName || 'No Role'); // Ensure string
                 }}
               />
             ) : (

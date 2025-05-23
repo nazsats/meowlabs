@@ -1,5 +1,5 @@
 interface StatusPanelProps {
-  primaryRole: string; // Role display name
+  primaryRole: string; // Already string, no change needed
   roles: string[]; // Role display names
   walletStatus: { submitted: boolean; timestamp?: string };
 }
