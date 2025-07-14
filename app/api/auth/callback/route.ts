@@ -7,14 +7,23 @@ import { cookies } from 'next/headers';
 interface DiscordUser {
   id: string;
   username: string;
+  avatar?: string;
 }
 
 export async function GET(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const redirectUri = new URL('/api/auth/callback', baseUrl).toString();
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  const cookieStore = await cookies();
+  const storedState = cookieStore.get('oauth_state')?.value;
+
   if (!code) {
     return NextResponse.redirect(`${baseUrl}/?error=no_code`);
+  }
+  if (!state || state !== storedState) {
+    return NextResponse.redirect(`${baseUrl}/?error=invalid_state`);
   }
 
   try {
@@ -25,7 +34,7 @@ export async function GET(request: NextRequest) {
         client_secret: process.env.DISCORD_CLIENT_SECRET!,
         grant_type: 'authorization_code',
         code,
-        redirect_uri: `${baseUrl}/api/auth/callback`,
+        redirect_uri: redirectUri,
       }),
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
@@ -40,14 +49,16 @@ export async function GET(request: NextRequest) {
     await setDoc(doc(db, 'users', user.id), {
       discordId: user.id,
       username: user.username,
+      avatar: user.avatar,
       timestamp: new Date(),
     });
 
-    const cookieStore = await cookies();
     cookieStore.set('userId', user.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     return NextResponse.redirect(`${baseUrl}/`);

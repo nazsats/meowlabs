@@ -36,6 +36,7 @@ export default function WelcomeDashboard({ username, avatar, primaryRole, roles 
       <h1 className='text-2xl sm:text-4xl font-bold text-[var(--border)] mb-2'>Welcome, {username}</h1>
       <p className='text-base sm:text-lg text-[var(--border)] mb-4 sm:mb-6'>
         Logged in as{' '}
+        
         <span className='font-semibold bg-[var(--border)] text-[var(--text)] px-2 py-1 rounded'>
           {primaryRole}
         </span>
