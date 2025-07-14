@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
   if (!DISCORD_BOT_TOKEN) {
-    console.error('Missing DISCORD_BOT_TOKEN');
+    console.error('Missing DISCORD_BOT_TOKEN environment variable');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
@@ -31,10 +31,14 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Error fetching Discord user data:', {
+      userId,
       message: error instanceof Error ? error.message : 'Unknown error',
       status: error instanceof axios.AxiosError ? error.response?.status : null,
       data: error instanceof axios.AxiosError ? error.response?.data : null,
     });
-    return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch user data from Discord' },
+      { status: 500 }
+    );
   }
 }
