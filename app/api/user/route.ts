@@ -1,14 +1,12 @@
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextResponse, NextRequest } from 'next/server';
 
-export async function GET() {
-  const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value || null;
-  console.log('User API - Returning userId:', userId);
-  if (userId && !/^\d{17,19}$/.test(userId)) {
-    console.log('Invalid userId, clearing cookie:', userId);
-    cookieStore.delete('userId');
+export async function GET(request: NextRequest) {
+  const userId = request.cookies.get('user_id')?.value;
+
+  if (!userId) {
+    console.log('No user_id cookie found');
     return NextResponse.json({ userId: null });
   }
+
   return NextResponse.json({ userId });
 }

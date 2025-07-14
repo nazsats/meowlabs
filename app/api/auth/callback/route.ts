@@ -1,69 +1,65 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import axios from 'axios';
-import { db } from '../../../lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
-import { cookies } from 'next/headers';
 
-interface DiscordUser {
-  id: string;
-  username: string;
-  avatar?: string;
-}
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get('code');
+  const state = searchParams.get('state');
 
-export async function GET(request: NextRequest) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const redirectUri = new URL('/api/auth/callback', baseUrl).toString();
-  const url = new URL(request.url);
-  const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  const cookieStore = await cookies();
-  const storedState = cookieStore.get('oauth_state')?.value;
-
-  if (!code) {
-    return NextResponse.redirect(`${baseUrl}/?error=no_code`);
+  if (!code || !state) {
+    console.error('Missing code or state in callback');
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}?error=missing_code_or_state`);
   }
-  if (!state || state !== storedState) {
-    return NextResponse.redirect(`${baseUrl}/?error=invalid_state`);
+
+  const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+  const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+  const REDIRECT_URI = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback`;
+
+  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET) {
+    console.error('Missing Discord environment variables');
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
   try {
+    // Exchange code for access token
     const tokenResponse = await axios.post(
       'https://discord.com/api/oauth2/token',
       new URLSearchParams({
-        client_id: process.env.DISCORD_CLIENT_ID!,
-        client_secret: process.env.DISCORD_CLIENT_SECRET!,
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
         grant_type: 'authorization_code',
         code,
-        redirect_uri: redirectUri,
+        redirect_uri: REDIRECT_URI,
       }),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      }
     );
 
     const { access_token } = tokenResponse.data;
 
-    const userResponse = await axios.get<DiscordUser>('https://discord.com/api/users/@me', {
+    // Fetch user data
+    const userResponse = await axios.get('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${access_token}` },
     });
-    const user = userResponse.data;
 
-    await setDoc(doc(db, 'users', user.id), {
-      discordId: user.id,
-      username: user.username,
-      avatar: user.avatar,
-      timestamp: new Date(),
-    });
+    const { id } = userResponse.data;
 
-    cookieStore.set('userId', user.id, {
+    // Create response and set cookie
+    const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}`);
+    response.cookies.set('user_id', id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 1 day
     });
 
-    return NextResponse.redirect(`${baseUrl}/`);
+    return response;
   } catch (error) {
-    console.error('Auth error:', error);
-    return NextResponse.redirect(`${baseUrl}/?error=auth_failed`);
+    console.error('Error in OAuth callback:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      status: error instanceof axios.AxiosError ? error.response?.status : null,
+    });
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}?error=auth_failed`);
   }
 }

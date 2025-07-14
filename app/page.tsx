@@ -56,7 +56,7 @@ export default function Home() {
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     chainId: 10143, // monadTestnet chain ID
-    query: { enabled: !!address }, // Only run query if address is defined
+    query: { enabled: !!address },
   });
 
   // Save wallet address and NFT-based role to Firestore
@@ -132,8 +132,14 @@ export default function Home() {
   // Fetch Discord user and check eligibility
   const fetchUserAndData = useCallback(async (forceRefresh = false) => {
     try {
-      const userRes = await fetch('/api/user', { credentials: 'include' });
-      if (!userRes.ok) throw new Error(`User API failed: ${userRes.statusText}`);
+      const userRes = await fetch('/api/user', {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' },
+      });
+      if (!userRes.ok) {
+        console.error('User API failed:', userRes.status, userRes.statusText);
+        throw new Error(`User API failed: ${userRes.statusText}`);
+      }
       const userData: { userId: string | null } = await userRes.json();
       console.log('User API response:', userData);
       if (!userData.userId) {
@@ -145,7 +151,10 @@ export default function Home() {
       const tokenRes = await fetch('/api/auth/token', {
         headers: { 'X-User-Id': userData.userId },
       });
-      if (!tokenRes.ok) throw new Error(`Token API failed: ${tokenRes.statusText}`);
+      if (!tokenRes.ok) {
+        console.error('Token API failed:', tokenRes.status, tokenRes.statusText);
+        throw new Error(`Token API failed: ${tokenRes.statusText}`);
+      }
       const tokenData: { username: string; avatar: string | null } = await tokenRes.json();
       console.log('Token API response:', tokenData);
 
@@ -162,7 +171,6 @@ export default function Home() {
       const hasEnoughNFTs = nftBalance !== undefined && Number(nftBalance) >= 5;
       setIsEligible(hasGTDRole || hasEnoughNFTs);
 
-      // Determine highest role type and mint phase
       const highestRoleId = roleRes.highestRole || (hasEnoughNFTs && NFT_ROLE_THRESHOLDS.find((r) => Number(nftBalance) >= r.threshold)?.id) || null;
       const roleProperties = highestRoleId ? getRoleProperties(highestRoleId) : null;
       setHighestRoleType(roleProperties?.type || null);

@@ -1,42 +1,41 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
-import { db } from '../../../lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export async function GET(request: Request) {
-  const userId = request.headers.get('X-User-Id');
+  const { headers } = request;
+  const userId = headers.get('X-User-Id');
+
   if (!userId) {
-    return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    console.error('Missing X-User-Id header');
+    return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
+  }
+
+  const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+  const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+  const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
+
+  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET || !DISCORD_GUILD_ID) {
+    console.error('Missing Discord environment variables');
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
   try {
-    const userDoc = doc(db, 'users', userId);
-    const userSnap = await getDoc(userDoc);
-    if (!userSnap.exists()) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    const { discordId, username } = userSnap.data();
-
-    // Fetch user info from Discord API
-    const userResponse = await axios.get(`https://discord.com/api/v10/users/${discordId}`, {
-      headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+    // Fetch user data from Discord API
+    const userResponse = await axios.get('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${process.env.DISCORD_BOT_TOKEN}` },
     });
 
-    const user = userResponse.data;
-    const avatar = user.avatar
-      ? `https://cdn.discordapp.com/avatars/${discordId}/${user.avatar}.png`
-      : null;
-
-    // Update Firestore with latest data
-    await setDoc(userDoc, { username: user.username, avatar }, { merge: true });
+    const { username, avatar } = userResponse.data;
 
     return NextResponse.json({
-      username: user.username || username || 'Unknown User',
-      avatar,
+      username,
+      avatar: avatar ? `https://cdn.discordapp.com/avatars/${userId}/${avatar}.png` : null,
     });
-  } catch (error: unknown) {
-    console.error('Error fetching user info:', error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: 'Failed to fetch user info' }, { status: 500 });
+  } catch (error) {
+    console.error('Error fetching Discord user data:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      status: error instanceof axios.AxiosError ? error.response?.status : null,
+    });
+    return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 500 });
   }
 }
