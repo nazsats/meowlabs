@@ -10,31 +10,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
   }
 
-  const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-  const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-  const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
+  const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
-  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET || !DISCORD_GUILD_ID) {
-    console.error('Missing Discord environment variables');
+  if (!DISCORD_BOT_TOKEN) {
+    console.error('Missing DISCORD_BOT_TOKEN');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
   try {
     // Fetch user data from Discord API
-    const userResponse = await axios.get('https://discord.com/api/users/@me', {
-      headers: { Authorization: `Bearer ${process.env.DISCORD_BOT_TOKEN}` },
+    const userResponse = await axios.get(`https://discord.com/api/users/${userId}`, {
+      headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` },
     });
 
     const { username, avatar } = userResponse.data;
 
     return NextResponse.json({
-      username,
+      username: username || 'Unknown User',
       avatar: avatar ? `https://cdn.discordapp.com/avatars/${userId}/${avatar}.png` : null,
     });
   } catch (error) {
     console.error('Error fetching Discord user data:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       status: error instanceof axios.AxiosError ? error.response?.status : null,
+      data: error instanceof axios.AxiosError ? error.response?.data : null,
     });
     return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 500 });
   }
