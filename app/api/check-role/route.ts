@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import axios, { AxiosError } from 'axios';
 import { db } from '../../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { ROLE_PROPERTIES, ROLE_HIERARCHY, ELIGIBLE_ROLES } from '../../lib/discord';
+import { ROLE_PROPERTIES, ELIGIBLE_ROLES, ROLE_HIERARCHY } from '../../lib/discord';
 
 interface DiscordRole {
   id: string;
@@ -37,10 +37,10 @@ async function retryRequest<T>(fn: () => Promise<T>, retries = 3, delay = 1000):
 }
 
 export async function POST(request: Request) {
-  let userId: string | null = null; // Declare userId outside try block
+  let userId: string | null = null;
   try {
     const { userId: requestUserId, forceRefresh } = await request.json();
-    userId = requestUserId; // Assign userId
+    userId = requestUserId;
     if (!userId) {
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     }

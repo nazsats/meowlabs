@@ -6,7 +6,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { useAccount, useBalance, useReadContract, useSwitchChain } from 'wagmi';
 import { nftABI } from './abi/nftABI';
-import { checkUserRole, getRoleProperties } from './lib/discord';
+import { getEligibilityMessage, ROLE_PROPERTIES, ROLE_HIERARCHY } from './lib/discord';
 import EligibilityBanner from '@/components/EligibilityBanner';
 import WalletConnectButton from '@/components/WalletConnectButton';
 
@@ -16,32 +16,18 @@ interface User {
   avatar: string | null;
 }
 
-const GTD_ROLE_IDS = [
-  '1271065450054418564', // Meow Mavens
-  '1272820953172152351', // OG Cat
-  '1272821145519001620', // X-Advocate
-  '1366405823080693860', // Catcents Legend
-  '1366405821206102046', // Mythic Pouncer
-  '1271757404945649664', // Active Paw
-  '1394315521922568326', // Prime Pouncer
-  '1394315298550579240', // Meowgaverse OG
-  '1394315707856060418', // Big Whisker
-  '1394315844116545637', // Solo Purr
-];
-
-const NFT_ROLE_THRESHOLDS = [
-  { id: '1394315298550579240', name: 'Meowgaverse OG', threshold: 20 },
-  { id: '1394315521922568326', name: 'Prime Pouncer', threshold: 10 },
-  { id: '1394315707856060418', name: 'Big Whisker', threshold: 5 },
-  { id: '1394315844116545637', name: 'Solo Purr', threshold: 1 },
-];
+interface RoleCheckResult {
+  hasEligibleRole: boolean;
+  roles: string[];
+  displayRoles: string[];
+  highestRole: string | null;
+  highestRoleName: string | null;
+}
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [isEligible, setIsEligible] = useState(false);
   const [highestNFTBasedRole, setHighestNFTBasedRole] = useState<string | null>(null);
-  const [highestRoleType, setHighestRoleType] = useState<'GTD' | 'FCFS' | null>(null);
-  const [highestRoleMintPhase, setHighestRoleMintPhase] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [walletStatus, setWalletStatus] = useState<{ submitted: boolean; address?: string; timestamp?: string }>({
     submitted: false,
@@ -59,76 +45,6 @@ export default function Home() {
     query: { enabled: !!address },
   });
 
-  // Save wallet address and NFT-based role to Firestore
-  useEffect(() => {
-    if (isConnected && address && user?.id && !walletStatus.submitted) {
-      const saveWalletAndRole = async () => {
-        try {
-          const nftCount = nftBalance ? Number(nftBalance) : 0;
-          const role = NFT_ROLE_THRESHOLDS.find((r) => nftCount >= r.threshold);
-          const roleId = role ? role.id : null;
-          const roleName = role ? role.name : null;
-
-          await setDoc(doc(db, 'wallets', user.id), {
-            walletAddress: address,
-            nftBasedRoleId: roleId,
-            nftBasedRoleName: roleName,
-            nftCount,
-            timestamp: new Date(),
-          });
-
-          setWalletStatus({
-            submitted: true,
-            address,
-            timestamp: new Date().toLocaleString('en-US', {
-              timeZone: 'UTC',
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            }),
-          });
-          setHighestNFTBasedRole(roleName);
-
-          toast.success('Wallet connected and role assigned!', {
-            style: { background: '#CBC3E3', color: '#4e3a76' },
-          });
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          toast.error(`Failed to save wallet: ${errorMessage}`, {
-            style: { background: '#CBC3E3', color: '#4e3a76' },
-          });
-        }
-      };
-      saveWalletAndRole();
-    }
-  }, [isConnected, address, user?.id, walletStatus.submitted, nftBalance]);
-
-  // Reset walletStatus on disconnect
-  useEffect(() => {
-    if (!isConnected) {
-      setWalletStatus({ submitted: false });
-      setHighestNFTBasedRole(null);
-    }
-  }, [isConnected]);
-
-  // Handle network errors and prompt network switch
-  useEffect(() => {
-    if (isConnected && chainId !== 10143) {
-      toast.error('Please switch to Monad Testnet', {
-        style: { background: '#CBC3E3', color: '#4e3a76' },
-      });
-    }
-    if (switchChainError) {
-      toast.error(`Network switch failed: ${switchChainError.message}`, {
-        style: { background: '#CBC3E3', color: '#4e3a76' },
-      });
-    }
-    if (nftError) {
-      toast.error(nftError.message, {
-        style: { background: '#CBC3E3', color: '#4e3a76' },
-      });
-    }
-  }, [chainId, isConnected, switchChainError, nftError]);
-
   // Fetch Discord user and check eligibility
   const fetchUserAndData = useCallback(async (forceRefresh = false) => {
     try {
@@ -145,6 +61,8 @@ export default function Home() {
       if (!userData.userId) {
         console.log('No userId, showing auth button');
         setUser(null);
+        setIsEligible(false);
+        setHighestNFTBasedRole(null);
         return;
       }
 
@@ -164,22 +82,51 @@ export default function Home() {
         avatar: tokenData.avatar,
       });
 
-      const roleRes = await checkUserRole(userData.userId, forceRefresh);
-      console.log('Role check result:', roleRes);
+      // Fetch roles from API with POST
+      const roleRes = await fetch('/api/check-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': forceRefresh ? 'no-cache' : 'default',
+        },
+        body: JSON.stringify({ userId: userData.userId, forceRefresh }),
+      });
+      if (!roleRes.ok) {
+        console.error('Role API failed:', roleRes.status, roleRes.statusText);
+        throw new Error(`Role API failed: ${roleRes.statusText}`);
+      }
+      const roleData: RoleCheckResult = await roleRes.json();
+      console.log('Role check result:', roleData);
 
-      const hasGTDRole = roleRes.roles.some((roleId) => GTD_ROLE_IDS.includes(roleId));
-      const hasEnoughNFTs = nftBalance !== undefined && Number(nftBalance) >= 5;
-      setIsEligible(hasGTDRole || hasEnoughNFTs);
+      setIsEligible(roleData.hasEligibleRole);
+      setHighestNFTBasedRole(roleData.highestRoleName);
 
-      const highestRoleId = roleRes.highestRole || (hasEnoughNFTs && NFT_ROLE_THRESHOLDS.find((r) => Number(nftBalance) >= r.threshold)?.id) || null;
-      const roleProperties = highestRoleId ? getRoleProperties(highestRoleId) : null;
-      setHighestRoleType(roleProperties?.type || null);
-      setHighestRoleMintPhase(roleProperties?.mintPhase || null);
-
+      // Save to Firestore
       const walletDoc = doc(db, 'wallets', userData.userId);
       const walletSnap = await getDoc(walletDoc);
       console.log('Wallet snapshot exists:', walletSnap.exists(), 'UserId:', userData.userId);
-      if (walletSnap.exists()) {
+
+      if (isConnected && address && !walletStatus.submitted) {
+        const nftCount = nftBalance ? Number(nftBalance) : 0;
+        await setDoc(doc(db, 'wallets', userData.userId), {
+          walletAddress: address,
+          nftBasedRoleName: roleData.highestRoleName,
+          nftCount,
+          timestamp: new Date(),
+        });
+        setWalletStatus({
+          submitted: true,
+          address,
+          timestamp: new Date().toLocaleString('en-US', {
+            timeZone: 'UTC',
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          }),
+        });
+        toast.success('Wallet connected and role assigned!', {
+          style: { background: '#CBC3E3', color: '#4e3a76' },
+        });
+      } else if (walletSnap.exists()) {
         const data = walletSnap.data();
         setWalletStatus({
           submitted: true,
@@ -203,13 +150,42 @@ export default function Home() {
           : `Failed to load user data: ${errorMessage}`
       );
     }
-  }, [nftBalance]);
+  }, [nftBalance, isConnected, address, walletStatus.submitted]);
 
   useEffect(() => {
     fetchUserAndData();
   }, [fetchUserAndData]);
 
-  console.log('Rendering Home, isEligible:', isEligible, 'user:', user, 'isConnected:', isConnected, 'highestNFTBasedRole:', highestNFTBasedRole, 'highestRoleType:', highestRoleType, 'highestRoleMintPhase:', highestRoleMintPhase);
+  // Handle network errors and prompt network switch
+  useEffect(() => {
+    if (isConnected && chainId !== 10143) {
+      toast.error('Please switch to Monad Testnet', {
+        style: { background: '#CBC3E3', color: '#4e3a76' },
+      });
+    }
+    if (switchChainError) {
+      toast.error(`Network switch failed: ${switchChainError.message}`, {
+        style: { background: '#CBC3E3', color: '#4e3a76' },
+      });
+    }
+    if (nftError) {
+      toast.error(nftError.message, {
+        style: { background: '#CBC3E3', color: '#4e3a76' },
+      });
+    }
+  }, [chainId, isConnected, switchChainError, nftError]);
+
+  // Reset walletStatus on disconnect
+  useEffect(() => {
+    if (!isConnected) {
+      setWalletStatus({ submitted: false });
+      setHighestNFTBasedRole(null);
+    }
+  }, [isConnected]);
+
+  const eligibilityMessage = getEligibilityMessage(highestNFTBasedRole ? ROLE_HIERARCHY.find(id => ROLE_PROPERTIES[id]?.displayName === highestNFTBasedRole) || null : null);
+
+  console.log('Rendering Home, isEligible:', isEligible, 'user:', user, 'isConnected:', isConnected, 'highestNFTBasedRole:', highestNFTBasedRole);
 
   // Sign out handler
   const handleSignOut = () => {
@@ -244,9 +220,7 @@ export default function Home() {
           </div>
           <EligibilityBanner
             isEligible={isEligible}
-            nftBasedRole={highestNFTBasedRole}
-            highestRoleType={highestRoleType}
-            highestRoleMintPhase={highestRoleMintPhase}
+            eligibilityMessage={eligibilityMessage}
           />
           <div className="bg-[var(--accent)] rounded-xl p-6 sm:p-8 shadow-xl border-4 border-[var(--border)]">
             <h2 className="text-xl sm:text-2xl font-bold text-[var(--border)] mb-4 text-center">

@@ -3,7 +3,7 @@ const { initializeApp } = require('firebase/app');
 const { getFirestore, collection, getDocs, doc, getDoc, setDoc } = require('firebase/firestore');
 
 // Hardcoded configuration for development
-const DISCORD_BOT_TOKEN = 'MTM1OTIwNDYwOTI1MTQ3OTgwMw.GgooP6.7S44kY5J30fSh05mR0pzRHUpvfGc4N3aemicQQ';
+const DISCORD_BOT_TOKEN = 'MTM1OTIwNDYwOTI1MTQ3OTgwMw.GPi2sJ.-GIkl5SgJk2N9d0Nl7u1Hg9hdF-Qcag2x5aKbM';
 const DISCORD_GUILD_ID = '1270790896396275813';
 const firebaseConfig = {
   apiKey: 'AIzaSyC668padzEobx0Py-rW3aS4fHOlAyvEavg',
