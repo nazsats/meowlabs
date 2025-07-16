@@ -12,6 +12,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import WelcomeDashboard from '@/components/WelcomeDashboard';
 import EligibilityBanner from '@/components/EligibilityBanner';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface User {
   id: string;
@@ -387,17 +388,33 @@ export default function Home() {
                     )}
                   </div>
                   <div className="flex flex-col items-center">
-                    <h3 className="text-lg sm:text-xl font-semibold text-[var(--text)] mb-2">NFT Media</h3>
-                    <div className="relative w-full max-w-xs rounded-lg overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300">
-                      <video
-                        src="https://teal-characteristic-reindeer-501.mypinata.cloud/ipfs/bafybeifkljwudpvlfhtcq5qrmg54hw3qu57rhtwx4zchrdiqta33xrsl4i"
-                        autoPlay
-                        loop
-                        muted
-                        className="w-full h-auto object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)]/50 to-transparent" />
-                    </div>
+                    <Link
+                      href="https://magiceden.io/collections/monad-testnet/0xfa28a33f198dc84454881fbb14c9d69dea97efdb"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center gap-4 w-full max-w-xs rounded-lg overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300"
+                    >
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg sm:text-xl font-semibold text-[var(--text)]">Secondary</h3>
+                        <Image
+                          src="/magiceden.png"
+                          alt="Magic Eden Collection"
+                          width={50}
+                          height={50}
+                          className="w-full max-w-[50px] sm:max-w-[50px] h-auto object-contain rounded-lg shadow-lg animate-glow"
+                        />
+                      </div>
+                      <div className="relative w-full rounded-lg overflow-hidden">
+                        <video
+                          src="https://teal-characteristic-reindeer-501.mypinata.cloud/ipfs/bafybeifkljwudpvlfhtcq5qrmg54hw3qu57rhtwx4zchrdiqta33xrsl4i"
+                          autoPlay
+                          loop
+                          muted
+                          className="w-full h-auto object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)]/50 to-transparent" />
+                      </div>
+                    </Link>
                   </div>
                 </div>
               )}
