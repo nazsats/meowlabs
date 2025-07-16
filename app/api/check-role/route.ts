@@ -42,7 +42,12 @@ export async function POST(request: Request) {
     const { userId: requestUserId, forceRefresh } = await request.json();
     userId = requestUserId;
     if (!userId) {
+      console.error('Missing userId in request');
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    }
+    if (!/^\d{17,19}$/.test(userId)) {
+      console.error('Invalid userId format:', userId);
+      return NextResponse.json({ error: 'Invalid userId format' }, { status: 400 });
     }
 
     const cacheDoc = doc(db, 'roleChecks', userId);
@@ -53,7 +58,7 @@ export async function POST(request: Request) {
       : null;
 
     if (!forceRefresh && cacheSnap.exists() && cacheAgeHours && cacheAgeHours < 1) {
-      console.log('Using cached role check for user:', userId, cacheData);
+      console.log('Using cached role check for user:', userId, JSON.stringify(cacheData, null, 2));
       return NextResponse.json(cacheData);
     }
 
@@ -75,8 +80,8 @@ export async function POST(request: Request) {
     ).catch((err) => {
       console.error('Error fetching guild roles:', {
         message: err.message,
-        status: err.response?.status,
-        data: err.response?.data,
+        status: err instanceof AxiosError ? err.response?.status : undefined,
+        data: err instanceof AxiosError ? err.response?.data : undefined,
       });
       throw err;
     });
@@ -97,8 +102,8 @@ export async function POST(request: Request) {
     ).catch((err) => {
       console.error('Error fetching member data:', {
         message: err.message,
-        status: err.response?.status,
-        data: err.response?.data,
+        status: err instanceof AxiosError ? err.response?.status : undefined,
+        data: err instanceof AxiosError ? err.response?.data : undefined,
       });
       throw err;
     });
@@ -119,17 +124,22 @@ export async function POST(request: Request) {
 
     const result: RoleCheckResult = { hasEligibleRole, roles: userRoles, displayRoles, highestRole, highestRoleName };
     await setDoc(cacheDoc, { ...result, timestamp: new Date() });
-    console.log('Saved role check to cache:', result);
+    console.log('Saved role check to cache:', JSON.stringify(result, null, 2));
 
     return NextResponse.json(result);
   } catch (err: unknown) {
-    console.error('Error checking user role:', {
+    console.error('Error checking user role for user', userId ?? 'unknown', ':', {
       message: err instanceof Error ? err.message : err,
       stack: err instanceof Error ? err.stack : undefined,
     });
     if (err instanceof AxiosError && err.response?.status === 404) {
       console.log(`User ${userId ?? 'unknown'} not found in guild`);
-      return NextResponse.json({ hasEligibleRole: false, roles: [], displayRoles: [], highestRole: null, highestRoleName: null });
+      const result: RoleCheckResult = { hasEligibleRole: false, roles: [], displayRoles: [], highestRole: null, highestRoleName: null };
+      if (userId) {
+        const cacheDoc = doc(db, 'roleChecks', userId);
+        await setDoc(cacheDoc, { ...result, timestamp: new Date() });
+      }
+      return NextResponse.json(result);
     }
     return NextResponse.json(
       { error: `Failed to check role: ${err instanceof Error ? err.message : 'Unknown error'}` },

@@ -49,6 +49,13 @@ async function getUser() {
   }
 }
 
+const externalLinks = {
+  playground: process.env.NEXT_PUBLIC_PLAYGROUND_URL || 'https://www.catcents.io/dashboard',
+  deets: process.env.NEXT_PUBLIC_DEETS_URL || 'https://deets.catcents.io/',
+  x: 'https://x.com/catcentsio',
+  discord: 'https://discord.com/invite/TXPbt7ztMC',
+};
+
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await getUser();
   console.log('User in layout:', user);
@@ -74,19 +81,19 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               </Link>
               <nav className="flex flex-wrap items-center gap-2 sm:gap-4">
                 <Link
-                  href="https://www.catcents.io/dashboard"
+                  href={externalLinks.playground}
                   className="px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base"
                 >
                   Playground
                 </Link>
                 <Link
-                  href="https://deets.catcents.io/"
+                  href={externalLinks.deets}
                   className="px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base"
                 >
                   Deets
                 </Link>
                 <a
-                  href="https://x.com/catcentsio"
+                  href={externalLinks.x}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1 sm:p-2 hover:scale-110 transition-transform"
@@ -95,7 +102,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                   <Image src="/x-icon.png" alt="X" width={24} height={24} className="w-6 h-6 sm:w-7 sm:h-7" />
                 </a>
                 <a
-                  href="https://discord.com/invite/TXPbt7ztMC"
+                  href={externalLinks.discord}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1 sm:p-2 hover:scale-110 transition-transform"
@@ -109,9 +116,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               </nav>
             </div>
           </header>
-          <main className="max-w-6xl mx-auto p-4 sm:p-6 flex-grow flex flex-col">
-            {children}
-          </main>
+          <Suspense fallback={<div className="flex-grow flex items-center justify-center">Loading...</div>}>
+            <main className="max-w-6xl mx-auto p-4 sm:p-6 flex-grow flex flex-col">
+              {children}
+            </main>
+          </Suspense>
           <Footer />
         </ContextProvider>
       </body>
