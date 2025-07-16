@@ -8,6 +8,7 @@ import Nav from '@/components/Nav';
 import { headers } from 'next/headers';
 import ContextProvider from './context';
 import { Suspense } from 'react';
+import { Analytics } from '@vercel/analytics/next';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -20,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Catcents NFT App',
+  title: 'Meowlabs',
   description: 'NFT Dashboard with Discord authentication',
 };
 
@@ -52,7 +53,6 @@ async function getUser() {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await getUser();
   console.log('User in layout:', user);
-  // Safe type assertion: headers() to unknown to Headers
   const cookies = (headers() as unknown as Headers).get('cookie') ?? null;
 
   return (
@@ -84,6 +84,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             </main>
           </Suspense>
           <Footer />
+          <Analytics />
         </ContextProvider>
       </body>
     </html>
