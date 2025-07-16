@@ -287,16 +287,6 @@ export default function Home() {
   return (
     <ErrorBoundary>
       <div className="flex flex-col min-h-[calc(100vh-8rem)] items-center justify-center">
-        {!user && (
-          <header className="w-full flex justify-end p-4">
-            <Link
-              href="/api/auth/login"
-              className="text-base sm:text-lg text-[var(--text)] font-semibold hover:text-[var(--accent)] transition-colors duration-300"
-            >
-              Sign In
-            </Link>
-          </header>
-        )}
         {error && (
           <div className="bg-[var(--error)] text-white p-3 sm:p-4 rounded-lg text-center text-sm sm:text-base max-w-md mx-auto">
             {error.includes('https://discord.com/invite') ? (
@@ -348,7 +338,7 @@ export default function Home() {
               {!isConnected ? (
                 <div className="text-center">
                   <p className="text-base sm:text-lg text-[var(--border)] mb-4">
-                    Connect your wallet to view your balance and NFTs
+                    Connect your wallet to get the holders role
                   </p>
                   <WalletConnectButton />
                 </div>
@@ -419,6 +409,12 @@ export default function Home() {
             <p className="text-base sm:text-lg text-[var(--text)] mb-6 sm:mb-8">
               Sign in with Discord to access your dashboard.
             </p>
+            <Link
+              href="/api/auth/login"
+              className="inline-block px-6 py-3 text-lg sm:text-xl font-bold text-white bg-gradient-to-r from-green-500 to-green-700 rounded-lg shadow-lg hover:from-green-600 hover:to-green-800 hover:scale-105 transition-all duration-300"
+            >
+              Sign In with Discord
+            </Link>
           </div>
         )}
       </div>

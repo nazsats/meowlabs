@@ -31,9 +31,9 @@ export default function HeaderControls({ user }: HeaderControlsProps) {
       ) : (
         <Link
           href="/api/auth/login"
-          className="px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base"
+          className="text-base sm:text-lg text-[var(--text)] font-semibold hover:text-[var(--accent)] transition-colors duration-300"
         >
-          Sign In
+          Sign In with Discord
         </Link>
       )}
     </div>

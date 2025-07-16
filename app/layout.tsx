@@ -82,34 +82,17 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <nav className="flex flex-wrap items-center gap-2 sm:gap-4">
                 <Link
                   href={externalLinks.playground}
-                  className="px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base"
+                  className="text-base sm:text-lg text-[var(--text)] font-semibold hover:text-[var(--accent)] transition-colors duration-300"
                 >
                   Playground
                 </Link>
                 <Link
                   href={externalLinks.deets}
-                  className="px-3 py-1 sm:px-4 sm:py-2 text-[var(--text)] font-semibold rounded-full bg-[var(--border)] hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300 text-sm sm:text-base"
+                  className="text-base sm:text-lg text-[var(--text)] font-semibold hover:text-[var(--accent)] transition-colors duration-300"
                 >
                   Deets
                 </Link>
-                <a
-                  href={externalLinks.x}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1 sm:p-2 hover:scale-110 transition-transform"
-                  aria-label="Follow on X"
-                >
-                  <Image src="/x-icon.png" alt="X" width={24} height={24} className="w-6 h-6 sm:w-7 sm:h-7" />
-                </a>
-                <a
-                  href={externalLinks.discord}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1 sm:p-2 hover:scale-110 transition-transform"
-                  aria-label="Join Discord"
-                >
-                  <Image src="/discord-icon.png" alt="Discord" width={24} height={24} className="w-6 h-6 sm:w-7 sm:h-7" />
-                </a>
+                
                 <Suspense fallback={<div className="animate-pulse h-8 w-40 bg-[var(--border)] rounded-full" />}>
                   <HeaderControls user={user} />
                 </Suspense>
