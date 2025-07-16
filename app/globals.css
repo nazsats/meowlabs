@@ -1,12 +1,12 @@
 @import 'tailwindcss';
 
 :root {
-  --background: #2596be;
-  --border: #4e3a76;
-  --accent: #CBC3E3;
-  --text: #FFFFFF;
-  --success: #06402B;
-  --error: #EF4444;
+  --background: #1A1A1A; /* Black */
+  --border: #4C1D95; /* Dark purple */
+  --accent: #8B5CF6; /* Soft purple */
+  --text: #efebf3; /* Vibrant purple */
+  --success: #073928; /* Emerald green */
+  --error: #F43F5E; /* Rose red */
 }
 
 html, body {
@@ -18,7 +18,7 @@ body {
   font-family: 'Geist', sans-serif;
   background-color: var(--background);
   color: var(--text);
-  background-image: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1));
+  background-image: linear-gradient(rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.1));
 }
 
 h1,
@@ -51,15 +51,26 @@ h3 {
   .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;
   }
+  .animate-neon {
+    animation: neon 1.5s ease-in-out infinite alternate;
+  }
 }
 
 @keyframes glow {
-  0%,
-  100% {
-    box-shadow: 0 0 5px var(--accent);
+  0%, 100% {
+    box-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent);
   }
   50% {
-    box-shadow: 0 0 20px var(--accent);
+    box-shadow: 0 0 20px var(--accent), 0 0 30px var(--accent);
+  }
+}
+
+@keyframes neon {
+  from {
+    text-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent), 0 0 15px var(--accent);
+  }
+  to {
+    text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent), 0 0 30px var(--accent);
   }
 }
 
@@ -73,8 +84,7 @@ h3 {
 }
 
 @keyframes cat-bounce {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0);
   }
   50% {
@@ -83,12 +93,13 @@ h3 {
 }
 
 @keyframes pulse-status {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
+    box-shadow: 0 0 5px var(--accent);
   }
   50% {
     opacity: 0.7;
+    box-shadow: 0 0 15px var(--accent);
   }
 }
 

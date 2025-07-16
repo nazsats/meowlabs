@@ -23,7 +23,7 @@ export default function WelcomeDashboard({ username, avatar, discordRoles, nftRo
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut', type: 'spring', stiffness: 80 }}
-      className="bg-[var(--accent)] rounded-xl p-4 sm:p-8 shadow-xl border-4 border-[var(--border)] text-center relative overflow-hidden bg-[url('/images/cat-pattern.png')] bg-opacity-10"
+      className="bg-[var(--accent)] rounded-xl p-4 sm:p-8 shadow-xl border-4 border-[var(--border)] text-center relative overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-12 sm:w-16 h-12 sm:h-16">
         <Image
@@ -37,7 +37,7 @@ export default function WelcomeDashboard({ username, avatar, discordRoles, nftRo
       <div className="relative w-24 sm:w-32 h-24 sm:h-32 mx-auto mb-4 sm:mb-6">
         <motion.div
           animate={{ scale: [1, 1.05, 1], transition: { repeat: Infinity, duration: 3 } }}
-          className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 opacity-50"
+          className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-400 to-purple-600 opacity-50"
         />
         <Image
           src={avatar || defaultAvatar}
@@ -49,18 +49,18 @@ export default function WelcomeDashboard({ username, avatar, discordRoles, nftRo
           priority
         />
       </div>
-      <h1 className="text-2xl sm:text-4xl font-bold text-[var(--border)] mb-4 sm:mb-6">{`Welcome, ${username}`}</h1>
+      <h1 className="text-2xl sm:text-4xl font-bold text-[var(--text)] mb-4 sm:mb-6 hover:animate-neon">Welcome, {username}</h1>
       {allRoles.length > 0 && (
         <div className="flex flex-wrap justify-center gap-2 mb-4">
           {allRoles.map((role, index) => (
             <p
-              key={`${role}-${index}`} // Unique key using role and index
+              key={`${role}-${index}`}
               className={`text-base sm:text-lg font-semibold px-4 py-2 rounded-full ${
                 role === highestRole
                   ? isGTD
                     ? 'bg-gradient-to-r from-yellow-500 to-yellow-700 text-white font-bold shadow-md'
-                    : 'bg-gradient-to-r from-green-500 to-green-700 text-white font-bold shadow-md' // Green for FCFS
-                  : 'bg-[var(--border)] text-[var(--text)]'
+                    : 'bg-gradient-to-r from-[var(--success)] to-green-700 text-white font-bold shadow-md'
+                  : 'bg-[var(--border)] text-[#D8B4FE] hover:animate-neon'
               }`}
             >
               {role}

@@ -4,7 +4,7 @@ import './globals.css';
 import Link from 'next/link';
 import Image from 'next/image';
 import Footer from '@/components/Footer';
-import HeaderControls from '@/components/HeaderControls';
+import Nav from '@/components/Nav';
 import { headers } from 'next/headers';
 import ContextProvider from './context';
 import { Suspense } from 'react';
@@ -49,17 +49,11 @@ async function getUser() {
   }
 }
 
-const externalLinks = {
-  playground: process.env.NEXT_PUBLIC_PLAYGROUND_URL || 'https://www.catcents.io/dashboard',
-  deets: process.env.NEXT_PUBLIC_DEETS_URL || 'https://deets.catcents.io/',
-  x: 'https://x.com/catcentsio',
-  discord: 'https://discord.com/invite/TXPbt7ztMC',
-};
-
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await getUser();
   console.log('User in layout:', user);
-  const cookies = (await headers()).get('cookie');
+  // Safe type assertion: headers() to unknown to Headers
+  const cookies = (headers() as unknown as Headers).get('cookie') ?? null;
 
   return (
     <html lang="en">
@@ -67,8 +61,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-[var(--background)]`}
       >
         <ContextProvider cookies={cookies}>
-          <header className="bg-gradient-to-r from-[var(--background)] to-[var(--accent)] p-3 sm:p-4 shadow-lg sticky top-0 z-50">
-            <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+          <header className="bg-gradient-to-r from-[#1A1A1A] to-[#4C1D95] p-3 sm:p-4 shadow-lg sticky top-0 z-50">
+            <div className="max-w-6xl mx-auto flex justify-between items-center gap-3 sm:gap-0">
               <Link href="/" className="flex items-center gap-2 sm:gap-3">
                 <Image
                   src="/cat-logo.png"
@@ -79,24 +73,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                   priority
                 />
               </Link>
-              <nav className="flex flex-wrap items-center gap-2 sm:gap-4">
-                <Link
-                  href={externalLinks.playground}
-                  className="text-base sm:text-lg text-[var(--text)] font-semibold hover:text-[var(--accent)] transition-colors duration-300"
-                >
-                  Playground
-                </Link>
-                <Link
-                  href={externalLinks.deets}
-                  className="text-base sm:text-lg text-[var(--text)] font-semibold hover:text-[var(--accent)] transition-colors duration-300"
-                >
-                  Deets
-                </Link>
-                
-                <Suspense fallback={<div className="animate-pulse h-8 w-40 bg-[var(--border)] rounded-full" />}>
-                  <HeaderControls user={user} />
-                </Suspense>
-              </nav>
+              <Suspense fallback={<div className="animate-pulse h-8 w-40 bg-[var(--border)] rounded-full" />}>
+                <Nav user={user} />
+              </Suspense>
             </div>
           </header>
           <Suspense fallback={<div className="flex-grow flex items-center justify-center">Loading...</div>}>

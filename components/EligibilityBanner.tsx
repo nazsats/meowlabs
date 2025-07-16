@@ -27,14 +27,12 @@ export default function EligibilityBanner({ highestRole }: EligibilityBannerProp
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className={`bg-[var(--accent)] rounded-xl p-4 sm:p-6 shadow-xl border-4 border-[var(--border)] text-center bg-[url('/images/cat-pattern.png')] bg-opacity-10 ${
-        isGTD ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-700/20' : 'bg-gradient-to-r from-green-500/20 to-green-700/20' // Green for FCFS
-      }`}
+      className="bg-gradient-to-r from-[var(--accent)]/20 to-[var(--border)]/20 rounded-xl p-4 sm:p-6 shadow-xl border-4 border-[var(--border)] text-center"
     >
       <p
-        className={`text-base sm:text-lg font-semibold ${
-          isGTD ? 'text-yellow-600' : 'text-green-600' // Green text for FCFS
-        }`}
+        className={`text-base sm:text-lg font-semibold text-[var(--text)] hover:animate-neon transition-all duration-300 ${
+          isGTD ? 'bg-gradient-to-r from-yellow-500/30 to-yellow-700/30' : 'bg-gradient-to-r from-[var(--success)]/30 to-green-700/30'
+        } px-4 py-2 rounded-full`}
       >
         {message}
       </p>

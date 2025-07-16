@@ -248,19 +248,19 @@ export default function Home() {
   useEffect(() => {
     if (isConnected && chainId !== 10143) {
       toast.error('Please switch to Monad Testnet', {
-        style: { background: '#CBC3E3', color: '#4e3a76' },
+        style: { background: 'var(--accent)', color: 'var(--background)' },
       });
     }
     if (switchChainError) {
       console.error('Switch chain error:', switchChainError);
       toast.error(`Network switch failed: ${switchChainError.message}`, {
-        style: { background: '#CBC3E3', color: '#4e3a76' },
+        style: { background: 'var(--accent)', color: 'var(--background)' },
       });
     }
     if (nftError && !nftError.message.includes('MetaMask extension not found')) {
       console.error('NFT error:', nftError);
       toast.error(nftError.message, {
-        style: { background: '#CBC3E3', color: '#4e3a76' },
+        style: { background: 'var(--accent)', color: 'var(--background)' },
       });
     }
   }, [chainId, isConnected, switchChainError, nftError]);
@@ -306,7 +306,7 @@ export default function Home() {
             )}
             <button
               onClick={() => fetchUserAndData(true)}
-              className="ml-2 px-2 py-1 bg-[var(--border)] text-[var(--text)] rounded hover:bg-[var(--accent)]"
+              className="ml-2 px-2 py-1 bg-[var(--border)] text-[var(--text)] rounded hover:bg-[var(--accent)] hover:text-white transition-all duration-300"
             >
               Retry
             </button>
@@ -315,7 +315,7 @@ export default function Home() {
         {user && (
           <button
             onClick={() => fetchUserAndData(true)}
-            className="px-4 py-2 bg-[var(--border)] text-[var(--text)] rounded-lg mb-4 hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300"
+            className="px-4 py-2 bg-[var(--border)] text-[var(--text)] rounded-lg mb-4 hover:bg-[var(--accent)] hover:text-white hover:scale-105 transition-all duration-300"
             disabled={isLoadingRoles}
           >
             {isLoadingRoles ? 'Loading Roles...' : 'Refresh Roles'}
@@ -332,33 +332,33 @@ export default function Home() {
             />
             <EligibilityBanner highestRole={highestRole} />
             <div className="bg-[var(--accent)] rounded-xl p-6 sm:p-8 shadow-xl border-4 border-[var(--border)]">
-              <h2 className="text-xl sm:text-2xl font-bold text-[var(--border)] mb-4 text-center">
+              <h2 className="text-xl sm:text-2xl font-bold text-[var(--text)] mb-4 text-center">
                 Wallet & NFT Dashboard
               </h2>
               {!isConnected ? (
                 <div className="text-center">
-                  <p className="text-base sm:text-lg text-[var(--border)] mb-4">
-                    Connect your wallet to get the holders role
+                  <p className="text-base sm:text-lg text-[var(--text)] mb-4">
+                    Connect your wallet to view your balance and NFTs
                   </p>
                   <WalletConnectButton />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="flex flex-col items-center">
-                    <h3 className="text-lg sm:text-xl font-semibold text-[var(--border)] mb-2">Wallet Balance</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold text-[var(--text)] mb-2">Wallet Balance</h3>
                     <p className="text-base sm:text-lg text-[var(--success)]">
                       {balanceData ? `${balanceData.formatted} ${balanceData.symbol}` : 'Loading...'}
                     </p>
-                    <h3 className="text-lg sm:text-xl font-semibold text-[var(--border)] mt-4 mb-2">NFT Count</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold text-[var(--text)] mt-4 mb-2">NFT Count</h3>
                     {nftLoading && (
-                      <p className="text-base sm:text-lg text-[var(--border)]">Loading NFT balance...</p>
+                      <p className="text-base sm:text-lg text-[var(--text)]">Loading NFT balance...</p>
                     )}
                     {nftError && (
                       <div className="text-[var(--error)] text-base sm:text-lg">
                         <p>Error: Please ensure you are on Monad Testnet</p>
                         <button
                           onClick={() => switchChain({ chainId: 10143 })}
-                          className="mt-2 px-4 py-2 bg-[var(--border)] text-[var(--text)] rounded-lg hover:bg-[var(--accent)] hover:scale-105 transition-all duration-300"
+                          className="mt-2 px-4 py-2 bg-[var(--border)] text-[var(--text)] rounded-lg hover:bg-[var(--accent)] hover:text-white hover:scale-105 transition-all duration-300"
                         >
                           Switch to Monad Testnet
                         </button>
@@ -371,12 +371,12 @@ export default function Home() {
                         </p>
                         {walletStatus.pendingRole && (
                           <>
-                            <h3 className="text-lg sm:text-xl font-semibold text-[var(--border)] mt-4 mb-2">Pending Role</h3>
+                            <h3 className="text-lg sm:text-xl font-semibold text-[var(--text)] mt-4 mb-2">Pending Role</h3>
                             <p
                               className={`text-base sm:text-lg font-semibold px-3 py-1 rounded-full ${
                                 GTD_ROLES.includes(walletStatus.pendingRole)
                                   ? 'bg-gradient-to-r from-yellow-500 to-yellow-700 text-white'
-                                  : 'bg-gradient-to-r from-green-500 to-green-700 text-white'
+                                  : 'bg-gradient-to-r from-[var(--success)] to-green-700 text-white'
                               }`}
                             >
                               Pending Role: {walletStatus.pendingRole}
@@ -387,7 +387,7 @@ export default function Home() {
                     )}
                   </div>
                   <div className="flex flex-col items-center">
-                    <h3 className="text-lg sm:text-xl font-semibold text-[var(--border)] mb-2">NFT Media</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold text-[var(--text)] mb-2">NFT Media</h3>
                     <div className="relative w-full max-w-xs rounded-lg overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300">
                       <video
                         src="https://teal-characteristic-reindeer-501.mypinata.cloud/ipfs/bafybeifkljwudpvlfhtcq5qrmg54hw3qu57rhtwx4zchrdiqta33xrsl4i"
@@ -411,7 +411,7 @@ export default function Home() {
             </p>
             <Link
               href="/api/auth/login"
-              className="inline-block px-6 py-3 text-lg sm:text-xl font-bold text-white bg-gradient-to-r from-green-500 to-green-700 rounded-lg shadow-lg hover:from-green-600 hover:to-green-800 hover:scale-105 transition-all duration-300"
+              className="inline-block px-6 py-3 text-lg sm:text-xl font-bold text-white bg-gradient-to-r from-purple-600 to-purple-800 rounded-lg shadow-lg hover:from-purple-700 hover:to-purple-900 hover:scale-105 transition-all duration-300"
             >
               Sign In with Discord
             </Link>
